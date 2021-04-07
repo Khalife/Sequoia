@@ -7,7 +7,9 @@ This project aims at adressing secondary structure in proteins, solely using int
 
 
 
+## Dependencies
 
+scipy, Biopython, pytorch ,pytorch-geometric, scikit-learn
 
 
 ## Scripts
@@ -34,11 +36,11 @@ Module used to construct distance-based features of the protein.
 
 3 - write\_gcn\_multiBio.py
 
-python write\_gcn\_multiBio.py filedir prefix\_output\_filename nb\_neighbors
+python write\_gcn\_multiBio.py filedir prefix\_output\_filename nb\_neighbors conformation filename\_conformation
 
-Ex: python write\_gcn\_multiBio.py ./datasetA datasetA\_pickle 2
+Ex: python write\_gcn\_multiBio.py ./datasetA datasetA\_pickle 2 True conformation\_filename
 
-Writes to .pkl files extracted features for each protein in the subfolders of filedir (cf. 0. for filedir format).
+Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
 4 - noisy\_gcn\_multiBio.py
 
