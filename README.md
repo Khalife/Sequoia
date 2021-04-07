@@ -1,24 +1,14 @@
 # Distance based secondary structure assignment with node classification
 
-## Datasets 
 
-The list of pdb files for our Dataset A (X-ray cristallography) and Dataset B (NMR conformations) are in  datasetA/list\_proteins\_datasetA.txt and datasetB/list\_proteins\_datasetB.txt respectively.
-
-datasetA and datasetB directories also .tgz files containing annotations used for beta-sheet clustering.
+This project aims at adressing secondary structure in proteins, solely using inter atomic distances (or a subset of these distances), without knowing the protein structure information.
 
 
 
 
-Example for datasetA: 
 
 
-cd datasetA
 
-gunzip -k SecStruct_DatasetA.tgz && tar -xvf SecStruct_DatasetA.tar
-
-mkdir 00 && cd 00
-
-wget -i ../../list\_proteins\_datasetA.txt
 
 
 
@@ -79,3 +69,23 @@ Testing distance-based criteria for beta-sheet clustering. Returns score on list
 
 
 
+
+## Datasets 
+
+The list of pdb files for our Dataset A (X-ray cristallography) and Dataset B (NMR conformations) are in  datasetA/list\_proteins\_datasetA.txt and datasetB/list\_proteins\_datasetB.txt respectively.
+
+datasetA and datasetB directories also .tgz files containing annotations used for beta-sheet clustering.
+
+
+
+
+Example for datasetA: 
+
+
+cd datasetA
+
+gunzip -k SecStruct_DatasetA.tgz && tar -xvf SecStruct_DatasetA.tar
+
+mkdir 00 && cd 00
+
+wget -i ../../list\_proteins\_datasetA.txt
