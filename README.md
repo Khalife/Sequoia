@@ -42,14 +42,14 @@ Ex: python write\_gcn\_multiBio.py ./datasetA datasetA\_pickle 2 True conformati
 
 Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
-4 - noisy\_gcn\_multiBio.py
+5 - train\_model.py
 
-python gcn\_multiBio.py pkl\_file test\_filename classification\_type noise\_level
+python train\_model\_multiBio.py train\_filename classification\_type model\_path\_output 
 
-Ex: python noisy\_gcn\_multiBio.py datasetA\_pickle.pkl datasetB\_pickle.pkl helices 0.10 
+Ex: python train\_model.py datasetA\_pickle.pkl helices model\_save.tch
 
 Trains a GNN for secondary structure prediction, using features distance-based features in pkl\_files (training set : 75%). 
-Returns test score on the test set (25%).
+Saves model parameters in the model\_path\_output file.
 
 5 - clustering\_edge\_multi\_load\_multiBio.py
 
