@@ -1,15 +1,7 @@
 # Distance based secondary structure assignment with node classification
 
 
-This project aims at adressing secondary structure in proteins, solely using inter atomic distances (or a subset of these distances), without knowing the protein structure information.
-
-
-
-
-
-
-
-
+This project aims at adressing secondary structure in proteins, solely using inter atomic distances (or a subset of these distances), without knowing the protein sequence information. To do so, a protein is modelled as a graph of its residues, where edge features are computed as the cosine of dihedral angles between a pairs of residues. A simple geometric construction allows to reconstruct dihedral angles (modulo their sign) based on the distances between residues. Then, we make use of a message passing neural network. We also evaluate the impact of noise on the attribution of secondary structures, as well as the case where only C-alpha distances are known, which is a more realistic scenario in the case of Nuclear Magnetic Resonance (NMR) measurements.  
 
 
 
