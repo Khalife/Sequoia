@@ -37,6 +37,7 @@ wget -i ../../list\_proteins\_datasetA.txt
 0 - In the following, the filedir, datasetA or datasetB directories contain a subdirectory containing the .cif files. Example: 
 
 filedir  -> 00 -> 1ja2.cif
+
 datasetA -> 00 -> 1ca2.cif
                -> 1ba3.cif
 
