@@ -51,15 +51,15 @@ Ex: python train\_model.py datasetA\_pickle.pkl helices model\_save.tch
 Trains a GNN for secondary structure prediction, using features distance-based features in pkl\_files (training set : 75%). 
 Saves model parameters in the model\_path\_output file.
 
-5 - clustering\_edge\_multi\_load\_multiBio.py
+[comment]: <> (5 - clustering\_edge\_multi\_load\_multiBio.py)
 
-python noisy\_clustering\_edge\_multi\_load\_multiBio.py dataset\_index noise\_level 
+[comment]: <> (python noisy\_clustering\_edge\_multi\_load\_multiBio.py dataset\_index noise\_level)
 
-The dataset\_index variables is 0 for datasetA and 1 for datasetB.
+[comment]: <> (The dataset\_index variables is 0 for datasetA and 1 for datasetB.)
 
-Ex: python noisy\_clustering\_edge\_multi\_load\_multiBio.py 0 0.05
+[comment]: <> (Ex: python noisy\_clustering\_edge\_multi\_load\_multiBio.py 0 0.05)
 
-Testing distance-based criteria for beta-sheet clustering. Returns score on list of .cif files
+[comment]: <> (Testing distance-based criteria for beta-sheet clustering. Returns score on list of .cif files)
 
 
 
