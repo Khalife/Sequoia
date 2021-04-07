@@ -42,7 +42,7 @@ Ex: python write\_gcn\_multiBio.py ./datasetA datasetA\_pickle 2 True conformati
 
 Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
-5 - train\_model.py
+4 - train\_model.py
 
 python train\_model\_multiBio.py train\_filename classification\_type model\_path\_output 
 
