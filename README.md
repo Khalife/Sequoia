@@ -1,4 +1,4 @@
-# Description of scripts and datasets for Distance based secondary structure assignment with node classification (IJCAI 21)
+# Description of scripts and datasets for Distance based secondary structure assignment with node classification
 
 ## Datasets 
 
