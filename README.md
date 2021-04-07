@@ -9,7 +9,7 @@ This project aims at adressing secondary structure in proteins, solely using int
 
 ## Dependencies
 
-scipy, Biopython, pytorch ,pytorch-geometric, scikit-learn
+scipy, Biopython, pytorch, pytorch-geometric, scikit-learn
 
 
 ## Scripts
