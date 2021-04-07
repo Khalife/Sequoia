@@ -1,18 +1,7 @@
-import os.path as osp
-import json
-import torch
-import torch.nn.functional as F
-from torch_geometric.datasets import Planetoid
-import torch_geometric.transforms as T
-from torch_geometric.nn import GCNConv, ChebConv, GATConv, NNConv  # noqa
-from torch.nn import Sequential as Seq, Linear as Lin, ReLU
-import pdb, random, time
-from sklearn.metrics import f1_score
-
-
 if __name__ == "__main__":
+    import json
     import numpy as np
-    import load_multiBio, multi_load_multiBio, edge_multi_load_multiBio
+    import edge_multi_load_multiBio
     import pdb
     import sys
     import pickle
