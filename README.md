@@ -38,8 +38,7 @@ wget -i ../../list\_proteins\_datasetA.txt
 
 filedir  -> 00 -> 1ja2.cif
 
-datasetA -> 00 -> 1ca2.cif
-               -> 1ba3.cif
+datasetA -> 00 -> 1na2.cif, 1ba3.cif, ...
 
 1 - simple\_display.py
 
