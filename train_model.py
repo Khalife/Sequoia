@@ -45,28 +45,34 @@ class Sequoia(torch.nn.Module):
         return F.log_softmax(self.fc2(x), dim=1)
 
 
-
-def trainNNConv(model):
-    model.train()
+def trainNNConvBatch(model, data_loader, size_batch=2):
     optimizer.zero_grad()
-    out_model = model(data)
-    loss = F.nll_loss(out_model[data.train_mask], data.y[data.train_mask])
-    loss.backward()
-    optimizer.step()
-
+    for data_batch in data_loader:
+        out_model = model(data_batch)
+        loss = F.nll_loss(out_model[data_batch.train_mask], data_batch.y[data_batch.train_mask])
+        loss.backward()
+        optimizer.step()
 
 @torch.no_grad()
-def testNNConv(other_test=False, data_test=[]):
+def testNNConvBatch(model, data_loader, other_test=False, data_test=[]):
     model.eval()
-    PREDS = []
+    PREDS = {'train_mask': [], 'val_mask': [], 'test_mask': []}
+    GROUND_TRUTH_PREDS = {'train_mask': [], 'val_mask': [], 'test_mask': []}
+    scores = [] 
     if not other_test:
-        logits, scores = model(data), []
-        for mask_key, mask in data('train_mask', 'val_mask', 'test_mask'):
-            pred = logits[mask].max(1)[1]
-            score = f1_score(pred.tolist(), data.y[mask].tolist(), average="micro")
+        for data_batch in data_loader: 
+            logits, _ = model(data_batch), []
+            for mask_key, mask in data_batch('train_mask', 'val_mask', 'test_mask'):
+                pred = logits[mask].max(1)[1]
+                PREDS[mask_key] += pred.tolist()
+                GROUND_TRUTH_PREDS[mask_key] += data_batch.y[mask].tolist()
+
+        for mask_key in ['train_mask', 'val_mask', 'test_mask']:
+            score = f1_score(PREDS[mask_key], GROUND_TRUTH_PREDS[mask_key], average="micro")
             scores.append(score)
 
-    return scores
+    return scores, [PREDS["train_mask"], PREDS["val_mask"], PREDS["test_mask"]]
+
 
 def noise_project(X, epsilon):
     sign_X = np.sign(X)
@@ -169,13 +175,17 @@ if __name__ == "__main__":
     np.set_printoptions(threshold=sys.maxsize)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #device = torch.device('cpu')
     
     model, data = Sequoia(num_node_features, num_classes, num_edge_features).to(device), data.to(device)
+    data_list, _ =  edge_multi_load_multiBio.graphListToDataList(As, Xs, Ys, NXs)
+    size_batch = 2
+    data_loader = DataLoader([edge_multi_load_multiBio.returnDataFromDataList(x_dl[0], x_dl[1], x_dl[2], x_dl[3]).to(device) for x_dl in data_list], batch_size=size_batch)
+
+    print(model)
 
     optimizer = torch.optim.Adam([
         dict(params=model.parameters()),
-    ], lr=0.005)  
+    ], lr=0.00005)  
 
     
     best_val_acc = test_acc = 0
@@ -183,8 +193,8 @@ if __name__ == "__main__":
     model_path = model_path_output
 
     for epoch in range(1, nb_epochs+1):
-        trainNNConv(model)
-        [train_acc, val_acc, tmp_test_acc] = testNNConv()
+        trainNNConvBatch(model, data_loader, size_batch=size_batch)
+        [train_acc, val_acc, tmp_test_acc], PREDS = testNNConvBatch(model, data_loader)
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc

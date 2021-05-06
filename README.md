@@ -44,7 +44,7 @@ Writes to .pkl files extracted features (using 2 nearest neighbors) for each pro
 
 4 - train\_model.py
 
-python train\_model\_multiBio.py train\_filename classification\_type model\_path\_output 
+python train\_model.py train\_filename classification\_type model\_path\_output 
 
 Ex: python train\_model.py datasetA\_pickle.pkl helices model\_save.tch
 
