@@ -5,6 +5,7 @@ from torch_geometric.datasets import Planetoid
 import torch_geometric.transforms as T
 from torch_geometric.nn import GCNConv, ChebConv, GATConv, NNConv  # noqa
 from torch.nn import Sequential as Seq, Linear as Lin, ReLU
+from torch_geometric.data import DataLoader
 import pdb, random, time
 from sklearn.metrics import f1_score
 
