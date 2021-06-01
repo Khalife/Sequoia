@@ -75,19 +75,6 @@ def testNNConvBatch(model, data_loader, other_test=False, data_test=[]):
     return scores, [PREDS["train_mask"], PREDS["val_mask"], PREDS["test_mask"]]
 
 
-def noise_project(X, epsilon):
-    sign_X = np.sign(X)
-    first_condition = (np.array(X+epsilon) <= 1 )*(np.array(X+epsilon) >= -1) 
-    second_condition = np.array(X+epsilon) > 1
-    third_condition = np.array(X+epsilon) < -1
-
-    first_case = (X+epsilon)*first_condition
-    second_case = (X+epsilon-2)*second_condition
-    third_case = (2+(X+epsilon))*third_condition
-
-    return first_case + second_case + third_case
-
-
 if __name__ == "__main__":
     import numpy as np
     import edge_multi_load_multiBio, calpha_edge_multi_load_multiBio
@@ -97,10 +84,8 @@ if __name__ == "__main__":
     
     filename = sys.argv[1]
     classification_type = sys.argv[2]
-    noise_level = float(sys.argv[3])
     nb_neighbors = int(sys.argv[4])
     model_path_output = sys.argv[5]
-    assert(noise_level <= 0.5 and noise_level >= 0)
     
     with open(filename, "rb") as f:
         As_0, Xs, Ys_0, NXs_0_init, _ = pickle.load(f)
@@ -125,40 +110,9 @@ if __name__ == "__main__":
     
     #############################################################################
     ########################## Data augmentation ###############################
-    As = As_0
-    NXs = NXs_0
-    Ys = [np.array([map_st[yy] for yy in y.tolist()]) for y in Ys_0]
-    X_phi_psi_0 = []
-    for i_PA, PA in enumerate(As):
-        X_phi_psi_0_D = {}
-        for i_edge, source in enumerate(PA[0]):
-            if i_edge % 2 == 0:
-                feature_source = NXs[i_PA][i_edge]
-                current_feature_source = X_phi_psi_0_D.get(source, []) 
-                current_feature_source += feature_source 
-                X_phi_psi_0_D[source] = current_feature_source
-            
-        X_phi_psi_P = [[] for key in X_phi_psi_0_D]
-        for key in X_phi_psi_0_D:
-            X_phi_psi_P[key] = X_phi_psi_0_D[key]
-        X_phi_psi_0.append(X_phi_psi_P)
-
-    Xs = [np.concatenate([X_[:-1], X_phi_psi_0[i]], axis=1) for i, X_ in enumerate(Xs)]
-    #############################################################################
-
-    Ys = [Y_[:-1] for Y_ in Ys]
-    Y_values = [Y.tolist() for Y in Ys]
-    Y_values = sum(Y_values, [])
-    Y_values = sorted(list(set(Y_values)))
-    Y_tmp = []
-    Y_map = {}
-    for i, vy in enumerate(Y_values):
-        Y_map[vy] = i
-    Ys = [np.array([Y_map[y] for y in Y]) for Y in Ys]
-                                                                                              
+    As, Xs, Ys, NXs, ground_truth_provided = final_edge_multi_load_multiBio.dataAugmentation(As, Xs, Ys, NXs, map_st)
     data_batches, indices_protein = edge_multi_load_multiBio.graphListToData(As, Xs, Ys, NXs)
     data = data_batches
-
                                                                                               
     num_node_features = len(Xs[0][0])
     num_edge_features = len(NXs[0][0])
@@ -166,8 +120,6 @@ if __name__ == "__main__":
     num_classes =  len(set(Y_values))
     Yvalues = [Y.tolist() for Y in Ys]
     Yvalues=sum(Yvalues, [])
-
-
     ##############################################################################
     ##############################################################################
 
@@ -190,7 +142,7 @@ if __name__ == "__main__":
 
     
     best_val_acc = test_acc = 0
-    nb_epochs = 100 
+    nb_epochs = 50 
     model_path = model_path_output
 
     for epoch in range(1, nb_epochs+1):
