@@ -322,7 +322,7 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
     X = np.zeros((nb_residues, 1))
     Y = np.zeros((nb_residues,))      
 
-    standard_amino_acids_map = sac_map() 
+    standard_amino_acids_map = sac_map(calpha_mode) 
 
     NX = []
     DISTANCES = []
@@ -473,7 +473,6 @@ def loadGraphsFromDirectory(filedir, name_to_pattern, classification_type="helic
                             Xs.append(X)
                             Ys.append(Y)
                             NXs.append(NX)
-                            filew.write(protein_filename.split('.cif')[0] + "\n")
                         
     filew.close()
     return As, Xs, Ys, NXs, FOSs
