@@ -16,7 +16,7 @@ scipy, Biopython, pytorch, pytorch-geometric, scikit-learn
 
 
 
-0 - In the following, the filedir, datasetA or datasetB directories contain a subdirectory containing the .cif files. Example: 
+### 0 - In the following, the filedir, datasetA or datasetB directories contain a subdirectory containing the .cif files. Example: 
 
 filedir  -> 00 -> 1ja2.cif
 
@@ -24,13 +24,13 @@ datasetA -> 00 -> 1na2.cif, 1ba3.cif, ...
 
 1 - simple\_baseline\_display.py
 
-python simple\_display.py filedir
+Parses .cif of .pdb data files and prints results obtained with the First Order Statistics (FOS) method. 
 
-Parses .cif data files and prints results obtained with the First Order Statistics (FOS) method. 
+python simple\_display.py filedir
 
 2 - sequoia\_dataload\_multibio.py
 
-Module used to construct distance-based features of the protein.
+Module used to construct distance-based features of the protein using .cif or .pdb files.
 
 3 - sequoia\_datadump\_multibio.py
 
