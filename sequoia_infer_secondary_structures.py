@@ -1,15 +1,4 @@
-import os.path as osp
-import argparse
-import json, random
 import torch
-import torch.nn.functional as F
-from torch_geometric.datasets import Planetoid
-import torch_geometric.transforms as T
-from torch_geometric.nn import GCNConv, ChebConv, GATConv, NNConv  # noqa
-from torch.nn import Sequential as Seq, Linear as Lin, ReLU
-import pdb, random, time
-from sklearn.metrics import f1_score
-import sequoia_network
 
 
 @torch.no_grad()
@@ -19,7 +8,6 @@ def testNNConv(other_test=False, data_test=[]):
     if not other_test:
         logits, scores = model(data), []
         for mask_key, mask in data('test_mask'):
-        #for mask_key, mask in data('train_mask', 'val_mask', 'test_mask'):
             pred = logits[mask].max(1)[1]
             score = f1_score(pred.tolist(), data.y[mask].tolist(), average="micro")
             scores.append(score)
@@ -84,10 +72,17 @@ def ablateEdges(As_I, NXs_I, proportion_ablation):
 
 if __name__ == "__main__":
     import numpy as np
-    import edge_multi_load_multiBio, calpha_edge_multi_load_multiBio, new_edge_multi_load_multiBio, final_edge_multi_load_multiBio
-    import pdb
-    import sys
-    import pickle
+    import pdb, sys, pickle, os.path as osp, json, random, argparse
+    import torch.nn.functional as F
+    from torch_geometric.datasets import Planetoid
+    import torch_geometric.transforms as T
+    from torch_geometric.nn import GCNConv, ChebConv, GATConv, NNConv  # noqa
+    from torch.nn import Sequential as Seq, Linear as Lin, ReLU
+    import pdb, random, time
+    from sklearn.metrics import f1_score
+    import sequoia_network
+    import sequoia_dataload_multibio
+
     
     filename = sys.argv[1]
     classification_type = sys.argv[2]
@@ -103,15 +98,12 @@ if __name__ == "__main__":
         print("Warning: no conformation table provided, could be required for protein with several conformations")
         name_to_pattern = {} 
 
-    As_0, Xs, Ys_0, NXs_0_init, _ = final_edge_multi_load_multiBio.loadGraphFromFile(filename, name_to_pattern, classification_type=classification_type, distance_based=True, shuffle=False, nmr_conformations=False, calpha_mode=calpha_mode, dssp_mode=dssp_mode)
+    As_0, Xs_0, Ys_0, NXs_0, _ = sequoia_dataload_multibio.loadGraphFromFile(filename, name_to_pattern, classification_type=classification_type, distance_based=True, shuffle=False, nmr_conformations=False, calpha_mode=calpha_mode, dssp_mode=dssp_mode)
 
-    As_0 = [As_0]
-    Ys_0 = [Ys_0]
-    Xs = [Xs]
-    NXs_0_init = [NXs_0_init]
-
-    NXs_0 = []
-    start = time.time()
+    As = [As_0]
+    Ys = [Ys_0]
+    Xs = [Xs_0]
+    NXs = [NXs_0]
 
     if classification_type == "helices":
         map_st = {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5:1, 6: 1, 7: 1}
@@ -129,12 +121,25 @@ if __name__ == "__main__":
         map_st = {0: 0, 1: 0, 2: 0, 3: 2, 4: 1, 5: 2, 6: 2, 7: 2}
         num_classes = 3
 
+    if len(Ys[0]) > 0:
+        ground_truth_provided = True
+        Ys = [np.array([map_st[yy] for yy in y.tolist()]) for y in Ys]
+        Ys = [Y_[:-1] for Y_ in Ys]
+        Y_values = [Y.tolist() for Y in Ys]
+        Y_values = sum(Y_values, [])
+        Y_values = sorted(list(set(Y_values)))
+        Y_tmp = []
+        Y_map = {}
+        for i, vy in enumerate(Y_values):
+            Y_map[vy] = i
+        Ys = [np.array([Y_map[y] for y in Y]) for Y in Ys]
+    else:
+        ground_truth_provided = False
+        Ys = [np.array([i for i in range(num_classes-1)] + [num_classes-1 for i in range(len(Xs[0]) - num_classes + 1)])]
+
     ##############################################################################################################
     ############### Data augmentation: aggregate neighborhood  edge features into node features ##################
-    As = As_0
-    NXs = NXs_0_init
-    Ys = Ys_0
-
+    As, Xs, Ys, NXs, ground_truth_provided = sequoia_dataload_multibio.dataAugmentation(As, Xs, Ys, NXs, num_classes, map_st)
     data_batches, indices_protein = sequoia_dataload_multibio.graphListToData(As, Xs, Ys, NXs, test=False)
     data = data_batches
 
@@ -155,7 +160,6 @@ if __name__ == "__main__":
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model, data = sequoia_network.Sequoia(num_node_features, num_classes, num_edge_features).to(device), data.to(device)
-
 
     PREDS = []
     FINAL_SCORES = []
