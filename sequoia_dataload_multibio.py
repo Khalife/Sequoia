@@ -11,9 +11,8 @@ import Bio
 from Bio import PDB
 from Bio.Seq import Seq
 from scipy.spatial import distance as scipy_distance
-import pdb, os, sys, random, signal, time, warnings
-import clifford_algebra
-
+import pdb, os, sys, random, time
+import sequoia_clifford_algebra
 
 def graphToData(A, X, Y, NX, test=False):
     # A adjencency matrix
@@ -44,7 +43,6 @@ def graphToData(A, X, Y, NX, test=False):
         for ft2 in fraction_test:                            
             indices_test[ft2] = True
 
-        
         data.train_mask = torch.tensor(indices_train)
         data.val_mask = torch.tensor(indices_val)
         data.test_mask = torch.tensor(indices_test)
@@ -151,7 +149,7 @@ def computeDistanceResidue(residue1, residue2, residue_to_atoms, mode="min", cal
     return distance_r12
 
 
-def dataAugmentation(As, Xs, Ys, NXs, nb_labels, map_st):
+def dataAugmentation(As, Xs, Ys, NXs, nb_labels, map_st, overload=False):
     if len(Ys[0]) > 0:
         ground_truth_provided = True
         Ys = [Y_[:-1] for Y_ in Ys]
@@ -164,7 +162,6 @@ def dataAugmentation(As, Xs, Ys, NXs, nb_labels, map_st):
         Ys = [np.array([map_st[y] for y in Y]) for Y in Ys]
     else:
         ground_truth_provided = False
-        pdb.set_trace()
         Ys = [np.array([lab for lab in range(nb_labels-1)] + [nb_labels-1 for i in range(len(Xs[0]) - nb_labels)]).astype(int)]
 
     #############################################################################
@@ -175,31 +172,57 @@ def dataAugmentation(As, Xs, Ys, NXs, nb_labels, map_st):
     for i_PA, PA in enumerate(As):
         X_phi_psi_0_D = {}
         for i_edge, source in enumerate(PA[0]):
-            if i_edge % 2 == 0:
+            if not overload:
+                if i_edge % 2 == 0:
+                    feature_source = NXs[i_PA][i_edge]
+                    current_feature_source = X_phi_psi_0_D.get(source, []) 
+                    current_feature_source += feature_source 
+                    X_phi_psi_0_D[source] = current_feature_source
+            else:
                 feature_source = NXs[i_PA][i_edge]
                 current_feature_source = X_phi_psi_0_D.get(source, []) 
                 current_feature_source += feature_source 
                 X_phi_psi_0_D[source] = current_feature_source
+
             
         X_phi_psi_P = [[] for key in X_phi_psi_0_D]
         for key in X_phi_psi_0_D:
             X_phi_psi_P[key] = X_phi_psi_0_D[key]
         X_phi_psi_0.append(X_phi_psi_P)
 
-    Xs = [np.concatenate([X_[:-1], X_phi_psi_0[i]], axis=1) for i, X_ in enumerate(Xs)]
+    
+    try:
+        Xs = [np.concatenate([X_[:-1], X_phi_psi_0[i]], axis=1) for i, X_ in enumerate(Xs)]
+    except:
+        Xs = [np.concatenate([Xs[0], np.array(X_phi_psi_0[0])], axis=1)]
     #############################################################################
-    #pdb.set_trace()
     return As, Xs, Ys, NXs, ground_truth_provided 
 
 
+def sac_map(calpha_mode):
+    if not calpha_mode:
+        standard_amino_acids_map = {'ALA': 0, 'ARG': 1, 'ASN': 2, 'ASP': 3, 'CYS': 4, 'GLN': 5, 'GLU': 6,\
+                                    'GLY': 7, 'HIS': 8, 'ILE': 9, 'LEU': 10, 'LYS': 11, 'MET': 12, 'PHE':\
+                                    13, 'PRO': 14, 'PYL': 15, 'SEC': 16, 'SER': 17, 'THR': 18, 'TRP': 19,\
+                                    'TYR': 20, 'VAL': 21, 'UNK': 22, 'MSE': 23}
+        # normalize features
+        max_value = max(standard_amino_acids_map.values())
+        for key in standard_amino_acids_map.keys():
+            standard_amino_acids_map[key] /= max_value
 
+    else:
+        standard_amino_acids_map = {'ALA': 0, 'ARG': 0, 'ASN': 0, 'ASP': 0, 'CYS': 0, 'GLN': 0, 'GLU': 0,\
+                                    'GLY': 0, 'HIS': 0, 'ILE': 0, 'LEU': 0, 'LYS': 0, 'MET': 0, 'PHE': 0,\
+                                    'PRO': 0, 'PYL': 0, 'SEC': 0, 'SER': 0, 'THR': 0, 'TRP': 0, 'TYR': 0,\
+                                    'VAL': 0, 'UNK': 0, 'MSE': 0}
+    return standard_amino_acids_map
 
 
 
 
 def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", distance_based=True, distance_threshold=2, nb_neighbors=2, nb_features=4, shuffle=False, nmr_conformations=False, calpha_mode=False, dssp_mode=False):
-    # Returns protein graph in format A: adjacency matrix, X: node features matrix, Y node labels
-    # filename: String, name of file in mmCIF format
+    # Returns protein graph in format A: adjacency matrix, X: node features matrix, Y node labels, NX edge features
+    # filename: String, name of file in pdb or mmCIF format
     # name_to_pattern: Dictionary .cif name to pattern (str to str) 
     # classification_type: Str: "helices", "strand", "helices_strands" or "all"
     # distance_based: Boolean, if True then returns graph constructed based on distance_threshold. If false uses a sequence graph of the protein sequence
@@ -221,90 +244,11 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
         print("\nCould not parse or no file named %s" %protein_filename)
         return [], [], [], [], []
     
-    # Two scales: 
-    # - Atom level
-    # - Residue level
-    
-    # 1 - Atom level
-    # a - distances between atoms
-    # b - atom to residue? / residue to atom
-
-    # 2 - Residue level
-    # a - residue to dihedral angles in np.array() shape
-    # b - adjencency matrix in np.array() shape
-    # c - residue labels
-
-
-    # I - Get list of secondary structures computed with DSSP
-    # WARNING, DSSP might return less keys (each key correspond to a residue) than the total number of residues in the protein
-    #   H 	Alpha helix (4-12)
-    #   B 	Isolated beta-bridge residue
-    #   E 	Strand
-    #   G 	3-10 helix
-    #   I 	Pi helix
-    #   T 	Turn
-    #   S 	Bend
-    #   - 	None
-
-    X_phi_psi = []                     
-    X_omega = []
-    Y_labels = []                                     
-    debug_Y = []
-    features_FOS = []
-    
     map_st = {"G": 0, "H": 1, "I": 2, "T": 3, "E": 4, "B": 5, "S": 6, "-": 7}  # map used for secondary structure labels
 
-    #0 	DSSP index
-    #1 	Amino acid
-    #2 	Secondary structure
-    #3 	Relative ASA
-    #4 	Phi
-    #5 	Psi
-    #6 	NH-->O_1_relidx
-    #7 	NH-->O_1_energy
-    #8 	O-->NH_1_relidx
-    #9 	O-->NH_1_energy
-    #10 	NH-->O_2_relidx
-    #11 	NH-->O_2_energy
-    #12 	O-->NH_2_relidx
-    #13 	O-->NH_2_energy
-    
-    # OTHER WAY TO GET THE RESIDUE TYPES: [x.xtra for x in structure.get_residues() if len(x.xtra) > 0]
-    # This should have the same length as the list obtained from dssp
-
-    #residue_shapes = []
-    #residue_labels = []  # 0: alpha_helix, 1: beta_strand, 2: other
-    #residue_all_labels = []
-    #residue_keys = []
-    #residue_dssp = []
-    #x_phi_psi = []
- 
-    #for key in dssp.keys():
-    #    residue_key = dssp[key]
-    #    residue_dssp.append(residue_key)
-    #    residue_keys.append(residue_key[2])
-    #    residue_all_labels.append(map_st[residue_key[2]])
-    #    x_phi = residue_key[4]
-    #    x_psi = residue_key[5]
-    #    x_phi_psi.append([x_phi, x_psi])
-    #    residue_labels.append(map_st[residue_key[2]])
-    #    if 1:
-    #        residue_shapes.append(residue_key)
-    #        debug_Y.append(residue_key[2])
-    #
-    #y_label = residue_labels[:-1] 
-    #x_phi_ = [x[0] for x in x_phi_psi][1:]
-    #x_psi_ = [x[1] for x in x_phi_psi][:-1]
-    #x_phi_psi = [[x,y] for x,y in zip(x_phi_, x_psi_)] 
-    #Y_labels.append(y_label)
-    #X_phi_psi.append(x_phi_psi)
-    #assert(len(x_phi_psi) == len(y_label))
- 
-    # II - Get 3D coordinates
-    coordinates = [x.get_coord() for x in structure.get_atoms()]
-    atoms_full_ids = [x.get_full_id() for x in structure.get_atoms()]
 
     
+
     residue_to_atoms = {}
     atom_to_residue = {}
     atom_to_coordinates = {}
@@ -314,15 +258,10 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
 
     for residue in structure.get_residues():
         residue_to_atoms[residue] = []
-        #residue_id = " ".join([str(sr) for sr in residue.get_full_id()])
         for x in residue.get_atoms():
-            #x_id = " ".join([str(sx) for sx in x.get_full_id()])
             residue_to_atoms[residue].append(x)
             atom_to_residue[x] = residue
     
-    # graph of atoms
-
-
     # graph of residues
 
     all_patterns = False    
@@ -334,9 +273,9 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
         pattern_to_keep = [residue.get_full_id()[2] for residue in all_residues]
         all_patterns = True
 
-    #print(pattern_to_keep[0])
-    
-    # NEED TO JOIN WITH DSSP
+
+    ########################################################################################################################
+    ################################################### JOIN WITH DSSP #####################################################
     full_ids = []
     for x in all_residues:
         xx = x.get_full_id()[2:]
@@ -362,7 +301,6 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
             else:
                 residues.append(residue)
 
-
     final_residues = []
     if nmr_conformations:
         for i in range(len(residues)):
@@ -374,27 +312,23 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
 
     if shuffle:
         random.shuffle(residues)
+    ########################################################################################################################
+    ########################################################################################################################
+
+    ########################################################################################################################
+    ################################################## Graph construction ##################################################
 
     nb_residues = len(residues)
-    nb_total_features = nb_features*nb_neighbors + 1
     X = np.zeros((nb_residues, 1))
-    Y = np.zeros((nb_residues,))
-    NX = []
+    Y = np.zeros((nb_residues,))      
 
-    
-    A_data = []
-    A_cols = []
+    standard_amino_acids_map = sac_map() 
+
+    NX = []
+    DISTANCES = []
     A_row1 = []
     A_row2 = []
 
-    window_width = 2 
-    ratio_conversion = np.pi/180  
-    distances = {}
-    standard_amino_acids_map = {'ALA': 0, 'ARG': 1, 'ASN': 2, 'ASP': 3, 'CYS': 4, 'GLN': 5, 'GLU': 6, 'GLY': 7, 'HIS': 8, 'ILE': 9, 'LEU': 10, 'LYS': 11, 'MET': 12, 'PHE': 13, 'PRO': 14, 'PYL': 15, 'SEC': 16, 'SER': 17, 'THR': 18, 'TRP': 19, 'TYR': 20, 'VAL': 21, 'UNK': 22, 'MSE': 23}
-
-
-
-    DISTANCES = []
     for i in range(len(residues)-1):
         nb_remaining = len(residues) - i - 1
         distances_i = []
@@ -411,34 +345,15 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
     DISTANCES = np.array(DISTANCES)
     indices_closest_neighbors = np.argsort(DISTANCES, axis=1)
 
-
     for i in range(len(residues)-1):
         nb_remaining = len(residues) - i - 1
         sys.stdout.write("\r%i residues remaining" % nb_remaining)
         sys.stdout.flush() 
         # Based on distances
         if distance_based:
-            #distances_i = []
-            #for j in range(len(residues)-1):
-            #    if i != j:
-            #        residue_i = residues[i]
-            #        residue_j = residues[j]
-            #        dij = computeDistanceResidue(residue_i, residue_j, residue_to_atoms, calpha_mode=calpha_mode)
-            #        distances_i.append(dij)
-            #    else:
-            #        distances_i.append(1e+10)
-
             distances_i = DISTANCES[i]
-            
-            #indices_closest_neighbors = np.array(distances_i).argsort()[:nb_neighbors].tolist()
             indices_closest_neighbors_i = indices_closest_neighbors[i]
             X[i] = standard_amino_acids_map[residues[i].resname]
-            #ratio_conversion = np.pi/180.
-            #residue_key = dssp[residues[i].get_full_id()[2:]]
-            #x_phi = ratio_conversion*residue_key[4] 
-            #x_psi = ratio_conversion*residue_key[5]
-            #features_FOS_i = [np.cos(x_phi), np.cos(x_psi)]
-
             FOS_i = []
             for inj, nj in enumerate(indices_closest_neighbors_i[:nb_neighbors]): 
                 distances_nj = DISTANCES[nj]
@@ -449,7 +364,6 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
                     # C(i-1),N(i),Ca(i),C(i)
                     psi_ij = calc_dihedral(residues[i]['N'].get_vector(),residues[i]['CA'].get_vector(),residues[i]['C'].get_vector(), residues[nj]['N'].get_vector())
                     # N(i),Ca(i),C(i),N(i+1)
-
                     edge_ij_features = [np.cos(phi_ij), np.cos(psi_ij)]
 
                 else:
@@ -457,6 +371,9 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
                     Calpha_j = nj
                     # Compute dihedral angle between residue i and residue j
                     # Angles is already in radians, on the contrary of DSSP where angles are in degrees
+                    # CA(iprime) = l'atome CA le plus proche de CA(i) et different de CA(j)
+                    # CA(jprime) =  l'atome CA le plus proche de CA(j) et different de CA(i) et CA(iprime)
+                    # Et ensuite, on calcule l'angle diedre entre: CA(iprime)-CA(i)-CA(j)-CA(jprime).
                     if inj == 0:
                         indices_closest_neighbors_nj = indices_closest_neighbors[nj]
                         Calpha_iprime = indices_closest_neighbors_i[1] 
@@ -464,9 +381,7 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
                         while indices_closest_neighbors_nj[inj_prime] == i or indices_closest_neighbors_nj[inj_prime] == Calpha_iprime: inj_prime += 1
                         Calpha_jprime = indices_closest_neighbors_nj[inj_prime]
                         Calphas = [Calpha_iprime, Calpha_i, Calpha_j, Calpha_jprime]
-                        #pdb.set_trace()
-                    
-                    else: # second case: use average distance between i and nj to decide iprime or jprime. Drawing is necessary to understand.
+                    else: # second case: use average distance between i and nj to decide iprime or jprime.
                         indices_closest_neighbors_nj = indices_closest_neighbors[nj]
                         prime_candidates_i = [indices_closest_neighbors_i[xi] for xi in range(min(3, len(indices_closest_neighbors_i))) if xi != 1] 
                         prime_candidates_j = [indices_closest_neighbors_nj[xj] for xj in range(min(len(indices_closest_neighbors_nj),10)) if indices_closest_neighbors_nj[xj] != i] 
@@ -481,15 +396,6 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
                     
                         Calpha_jprime = [pcj for pcj in prime_candidates_j if pcj != Calpha_iprime and pcj != i][0] 
                         Calphas = [Calpha_iprime, Calpha_i, Calpha_j, Calpha_jprime]
-                        #pdb.set_trace()
-                    
-                    
-                    # x (i-3, i-2)
-                    # y (i-2, i) 
-                    # a (i-3, i)
-                    # b (i-2, i-1)
-                    # c (i-3, i-1)
-                    # d (i-1, i)
                     
                     x = DISTANCES[Calphas[0], Calphas[1]]
                     y = DISTANCES[Calphas[1], Calphas[3]]
@@ -499,19 +405,12 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
                     d = DISTANCES[Calphas[2], Calphas[3]]
                     
                     D_i_noisy = np.array([[0, x, c, a], [x, 0, b, y], [c, b, 0, d], [a, y, d, 0]])
-                    D_i = clifford_algebra.projectMatrixPosDef(D_i_noisy)
-                    
+                    D_i = sequoia_clifford_algebra.projectMatrixPosDef(D_i_noisy)
                     
                     x_, y_, a_, b_, c_, d_ = D_i[0,1], D_i[1,3], D_i[0,3], D_i[1,2], D_i[2,0], D_i[3,2]
-                    cos_phi_ij = clifford_algebra.compute_formula(x_, y_, a_, b_, c_, d_) 
+                    cos_phi_ij = sequoia_clifford_algebra.compute_formula(x_, y_, a_, b_, c_, d_) 
                     
-                    #CA(iprime) = l'atome CA le plus proche de CA(i) et different de CA(j)
-                    #CA(jprime) =  l'atome CA le plus proche de CA(j) et different de CA(i) et CA(iprime)
-                    #Et ensuite, on calcule l'angle diedre entre: CA(iprime)-CA(i)-CA(j)-CA(jprime).
-
-                    edge_ij_features = [cos_phi_ij]
-
-
+                    edge_ij_features = [cos_phi_ij, distances_i[nj]]
 
 
                 A_row1.append(i)
@@ -520,24 +419,6 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
                 A_row1.append(nj)
                 A_row2.append(i)
                 NX.append(edge_ij_features)
-
-                #FOS_i.append(edge_ij_features)
-
-            #mean_phi_i, mean_psi_i = np.mean([x[0] for x in FOS_i]), np.mean([x[1] for x in FOS_i])
-            #std_phi_i, std_psi_i = np.std([x[0] for x in FOS_i]), np.std([x[1] for x in FOS_i])
-            #features_FOS_i = [np.cos(x_phi), np.cos(x_psi)]
-            #features_FOS_i += [mean_phi_i, std_phi_i, mean_psi_i, std_psi_i]
-            #features_FOS.append(features_FOS_i)
-            
-        
-        # Supposing we have the order
-        else:
-            for j in range(i+1, min(len(residues), i+window_width)):
-                A_row1.append(i)
-                A_row2.append(j)
-                A_row1.append(j)
-                A_row2.append(i)
-
 
         if dssp_mode:     
             residue_key = dssp[residues[i].get_full_id()[2:]]
@@ -549,12 +430,20 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
         Y = []
 
     A = [A_row1, A_row2]
-    return A, X, Y, NX, [] #features_FOS
+    ########################################################################################################################
+    ########################################################################################################################
+    
+    ###################################################
+    ############# Recaling distances ##################
+    distances_max_protein = max([nx[1] for nx in NX])
+    NX_tmp = []
+    for nx in NX:
+        rescaled_distance = nx[1]/distances_max_protein
+        NX_tmp.append([nx[0], rescaled_distance])
+    NX = NX_tmp
+    ###################################################
 
-
-import time
-import sys
-import threading
+    return A, X, Y, NX, [] 
 
 
 
@@ -571,31 +460,23 @@ def loadGraphsFromDirectory(filedir, name_to_pattern, classification_type="helic
     Ys = []
     NXs = []
     FOSs = []
-    filew = open("listPDB1.txt", "w")
     for subdir, _, _ in os.walk(filedir):
         if subdir != filedir:
             for _, _, files in os.walk(subdir):
                 for i_protein, protein_filename in enumerate(files):
                     if '.cif' in protein_filename:
-                        #data_filename = protein_filename.split("/")[-1]
-                        #print("\r"+protein_filename)
                         sys.stdout.write("\rProtein filename, number %i" % i_protein)
                         sys.stdout.flush()
-                        A, X, Y, NX, FOS = loadGraphFromFile(subdir + "/"  + protein_filename, name_to_pattern, classification_type=classification_type, distance_based=distance_based, distance_threshold=distance_threshold, nb_neighbors=nb_neighbors, nb_features=nb_features, shuffle=shuffle, nmr_conformations=nmr_conformations, calpha_mode=calpha_mode, dssp_mode=dssp_mode)
+                        A, X, Y, NX, [] = loadGraphFromFile(subdir + "/"  + protein_filename, name_to_pattern, classification_type=classification_type, distance_based=distance_based, distance_threshold=distance_threshold, nb_neighbors=nb_neighbors, nb_features=nb_features, shuffle=shuffle, nmr_conformations=nmr_conformations, calpha_mode=calpha_mode, dssp_mode=dssp_mode)
                         if len(A) > 0:
                             As.append(A)
                             Xs.append(X)
                             Ys.append(Y)
                             NXs.append(NX)
-                            FOSs.append(FOS)
                             filew.write(protein_filename.split('.cif')[0] + "\n")
-                            #except:
-                            #    continue
                         
     filew.close()
     return As, Xs, Ys, NXs, FOSs
-
-
 
 
 if __name__ == "__main__":
