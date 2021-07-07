@@ -59,7 +59,16 @@ Loads model in .tch file and infer secondary structures after parsing a .pdb of 
 
 python sequoia\_infer\_secondary\_structures.py input\_filename classification\_type model\_filename calpha\_mode dssp\_mode output\_filename (optional: conformation\_table)
 
-Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 ./ cullpdb\_dict.json
+Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 sequoia\_preds.txt cullpdb\_dict.json
+
+### 6 - create\_pml\_file.py
+
+Reads output file predictions of sequoia\_infer\_secondary\_structures and construct .pml file for visualization with Pymol.
+Uses zero\_residues.py to renumber residues.
+
+python create\_pml\_file.py predictions\_filename input\_filename output\_directory   
+
+Ex: python create\_pml\_file.py sequoia\_preds.txt 1M22.cif .   
 
 
 
