@@ -36,9 +36,9 @@ Module used to construct distance-based features of the protein.
 
 3 - write\_gcn\_multiBio.py
 
-python write\_gcn\_multiBio.py filedir prefix\_output\_filename nb\_neighbors conformation filename\_conformation
+python sequoia\_datadump\_multiBio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode
 
-Ex: python write\_gcn\_multiBio.py ./datasetA datasetA\_pickle 2 True conformation\_filename
+Ex: python sequoia\_datadump\_multibio.py /data/PDB/cullpdb/ ok.test.here 2 xray 0 1
 
 Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
