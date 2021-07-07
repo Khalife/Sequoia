@@ -77,7 +77,7 @@ def testNNConvBatch(model, data_loader, other_test=False, data_test=[]):
 
 if __name__ == "__main__":
     import numpy as np
-    import sequoia_multi_data_loader
+    import sequoia_dataload_multibio
     import pdb, sys, pickle
     
     filename = sys.argv[1]
@@ -109,8 +109,8 @@ if __name__ == "__main__":
     
     #############################################################################
     ########################## Data augmentation ###############################
-    As, Xs, Ys, NXs, ground_truth_provided = sequoia_multi_data_loader.dataAugmentation(As_0, Xs, Ys_0, NXs_0_init, nb_labels, map_st)
-    data_batches, indices_protein = sequoia_multi_data_loader.graphListToData(As, Xs, Ys, NXs)
+    As, Xs, Ys, NXs, ground_truth_provided = sequoia_dataload_multibio.dataAugmentation(As_0, Xs, Ys_0, NXs_0_init, nb_labels, map_st)
+    data_batches, indices_protein = sequoia_dataload_multibio.graphListToData(As, Xs, Ys, NXs)
     data = data_batches
                                                                                               
     num_node_features = len(Xs[0][0])
@@ -130,9 +130,9 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     model, data = Sequoia(num_node_features, num_classes, num_edge_features).to(device), data.to(device)
-    data_list, _ =  sequoia_multi_data_loader.graphListToDataList(As, Xs, Ys, NXs)
+    data_list, _ =  sequoia_dataload_multibio.graphListToDataList(As, Xs, Ys, NXs)
     size_batch = 2
-    data_loader = DataLoader([sequoia_multi_data_loader.returnDataFromDataList(x_dl[0], x_dl[1], x_dl[2], x_dl[3]).to(device) for x_dl in data_list], batch_size=size_batch)
+    data_loader = DataLoader([sequoia_dataload_multibio.returnDataFromDataList(x_dl[0], x_dl[1], x_dl[2], x_dl[3]).to(device) for x_dl in data_list], batch_size=size_batch)
 
     print(model)
 

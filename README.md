@@ -16,37 +16,35 @@ scipy, Biopython, pytorch, pytorch-geometric, scikit-learn
 
 
 
-
-
 0 - In the following, the filedir, datasetA or datasetB directories contain a subdirectory containing the .cif files. Example: 
 
 filedir  -> 00 -> 1ja2.cif
 
 datasetA -> 00 -> 1na2.cif, 1ba3.cif, ...
 
-1 - simple\_display.py
+1 - simple\_baseline\_display.py
 
 python simple\_display.py filedir
 
 Parses .cif data files and prints results obtained with the First Order Statistics (FOS) method. 
 
-2 - edge\_multi\_load\_multiBio.py
+2 - sequoia\_dataload\_multibio.py
 
 Module used to construct distance-based features of the protein.
 
-3 - write\_gcn\_multiBio.py
+3 - sequoia\_datadump\_multiBio.py
 
 python sequoia\_datadump\_multiBio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode
 
-Ex: python sequoia\_datadump\_multibio.py /data/PDB/cullpdb/ ok.test.here 2 xray 0 1
+Ex: python sequoia\_datadump\_multibio.py cullpdb/ parsed\_data\_gnn\_cullpdb.pkl 2 xray 0 1
 
 Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
-4 - train\_model.py
+4 - sequoia\_train\_model.py
 
-python train\_model.py train\_filename classification\_type model\_path\_output 
+python sequoia\_train\_model.py train\_filename classification\_type model\_path\_output 
 
-Ex: python train\_model.py datasetA\_pickle.pkl helices model\_save.tch
+Ex: python sequoia\_train\_model.py parsed\_data\_gnn\_cullpdb.pkl helices 2 sequoia\_model\_save.tch
 
 Trains a GNN for secondary structure prediction, using features distance-based features in pkl\_files (training set : 75%). 
 Saves model parameters in the model\_path\_output file.
