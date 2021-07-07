@@ -57,9 +57,9 @@ Ex: python sequoia\_train\_model.py parsed\_data\_gnn\_cullpdb.pkl helices 2 seq
 
 Loads model in .tch file and infer secondary structures after parsing a .pdb of .cif file.
 
-python sequoia\_infer\_secondary\_structures.py input\_filename classification\_type model\_filename calpha\_mode dssp\_mode output\_filename
+python sequoia\_infer\_secondary\_structures.py input\_filename classification\_type model\_filename calpha\_mode dssp\_mode output\_filename (optional: conformation\_table)
 
-Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 ./
+Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 ./ cullpdb\_dict.json
 
 
 
