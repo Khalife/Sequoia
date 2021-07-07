@@ -32,9 +32,9 @@ Parses .cif data files and prints results obtained with the First Order Statisti
 
 Module used to construct distance-based features of the protein.
 
-3 - sequoia\_datadump\_multiBio.py
+3 - sequoia\_datadump\_multibio.py
 
-python sequoia\_datadump\_multiBio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode
+python sequoia\_datadump\_multibio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode
 
 Ex: python sequoia\_datadump\_multibio.py cullpdb/ parsed\_data\_gnn\_cullpdb.pkl 2 xray 0 1
 
