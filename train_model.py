@@ -11,12 +11,12 @@ from sklearn.metrics import f1_score
 
 class Sequoia(torch.nn.Module):
     # Message passing neural network composed of 2 sequential blocks. Each block uses a continuous kernel-based convolutional operator with 4 linear layers with ReLU activations.
-    def __init__(self, num_features, num_classes, num_edge_features):
-        super(Net2, self).__init__()
+    def __init__(self, num_node_features, num_classes, num_edge_features):
+        super(Sequoia, self).__init__()
 
         ##############
         # Parameters controlling the size of the linear operators and convolutional filters 
-        param0, param1, param2, param3, param4, param5 = 8, 64, 64, 64, 64  # First block
+        param0, param1, param2, param3, param4 = 8, 64, 64, 64, 64  # First block
         param5, param6, param7, param8, param9 = 25, 25, 25, 25, 64         # Second block
         ##############
 
@@ -77,47 +77,47 @@ def testNNConvBatch(model, data_loader, other_test=False, data_test=[]):
 
 if __name__ == "__main__":
     import numpy as np
-    import edge_multi_load_multiBio, calpha_edge_multi_load_multiBio
-    import pdb
-    import sys
-    import pickle
+    import sequoia_multi_data_loader
+    import pdb, sys, pickle
     
     filename = sys.argv[1]
     classification_type = sys.argv[2]
-    nb_neighbors = int(sys.argv[4])
-    model_path_output = sys.argv[5]
+    nb_neighbors = int(sys.argv[3])
+    model_path_output = sys.argv[4]
     
     with open(filename, "rb") as f:
         As_0, Xs, Ys_0, NXs_0_init, _ = pickle.load(f)
-            
+
     ##############################################################################
+    #map_st = {"G": 0, "H": 1, "I": 2, "T": 3, "E": 4, "B": 5, "S": 6, "-": 7}
     if classification_type == "all":
         map_st = {i:i for i in range(8)}
+        nb_labels = 8
 
     if classification_type == "helices":
-        #map_st = {"G": 0, "H": 0, "I": 0, "T": 1, "E": 1, "B": 1, "S": 1, "-": 1 }
-        #map_st = {"G": 0, "H": 1, "I": 2, "T": 3, "E": 4, "B": 5, "S": 6, "-": 7}
         map_st = {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5:1, 6: 1, 7: 1}
+        nb_labels = 2
 
     if classification_type == "sheets":
         map_st = {0: 0, 1: 0, 2: 0, 3: 0, 4: 1, 5: 0, 6: 0, 7: 0}
-
+        nb_labels = 2
 
     if classification_type == "helices_sheets":
-        #map_st = {"G": 0, "H": 0, "I": 0, "T": 2, "E": 1, "B": 2, "S": 2, "-":  2}
         map_st = {0: 0, 1: 0, 2: 0, 3: 2, 4: 1, 5: 2, 6: 2, 7: 2}
+        nb_labels = 3
 
     
     #############################################################################
     ########################## Data augmentation ###############################
-    As, Xs, Ys, NXs, ground_truth_provided = final_edge_multi_load_multiBio.dataAugmentation(As, Xs, Ys, NXs, map_st)
-    data_batches, indices_protein = edge_multi_load_multiBio.graphListToData(As, Xs, Ys, NXs)
+    As, Xs, Ys, NXs, ground_truth_provided = sequoia_multi_data_loader.dataAugmentation(As_0, Xs, Ys_0, NXs_0_init, nb_labels, map_st)
+    data_batches, indices_protein = sequoia_multi_data_loader.graphListToData(As, Xs, Ys, NXs)
     data = data_batches
                                                                                               
     num_node_features = len(Xs[0][0])
     num_edge_features = len(NXs[0][0])
                                                                                               
-    num_classes =  len(set(Y_values))
+    #num_classes =  len(set(Y_values))
+    num_classes = nb_labels
     Yvalues = [Y.tolist() for Y in Ys]
     Yvalues=sum(Yvalues, [])
     ##############################################################################
@@ -130,9 +130,9 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     model, data = Sequoia(num_node_features, num_classes, num_edge_features).to(device), data.to(device)
-    data_list, _ =  edge_multi_load_multiBio.graphListToDataList(As, Xs, Ys, NXs)
+    data_list, _ =  sequoia_multi_data_loader.graphListToDataList(As, Xs, Ys, NXs)
     size_batch = 2
-    data_loader = DataLoader([edge_multi_load_multiBio.returnDataFromDataList(x_dl[0], x_dl[1], x_dl[2], x_dl[3]).to(device) for x_dl in data_list], batch_size=size_batch)
+    data_loader = DataLoader([sequoia_multi_data_loader.returnDataFromDataList(x_dl[0], x_dl[1], x_dl[2], x_dl[3]).to(device) for x_dl in data_list], batch_size=size_batch)
 
     print(model)
 
