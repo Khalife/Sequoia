@@ -11,41 +11,6 @@ import pdb, random, time
 from sklearn.metrics import f1_score
 import sequoia_network
 
-#class Net2(torch.nn.Module):
-#    def __init__(self, num_features, num_classes, num_edge_features):
-#        super(Net2, self).__init__()
-#        #param1 = 32
-#        #param2 = 128
-#        param0 = 8
-#        param1 = 64 
-#        param2 = 64
-#        param3 = 64
-#        param4 = 64
-#        param5 = 64
-#
-#        nn1 = torch.nn.Sequential(torch.nn.Linear(num_edge_features, param1), torch.nn.ReLU(), torch.nn.Linear(param1, param3), torch.nn.ReLU(), torch.nn.Linear(param3, param4), torch.nn.ReLU(), torch.nn.Linear(param4, num_node_features*param2))
-#
-#
-#        self.conv1 = NNConv(num_node_features, param2, nn1, aggr='mean')
-#
-#        nn2 = torch.nn.Sequential(torch.nn.Linear(num_edge_features, 25), torch.nn.ReLU(), torch.nn.Linear(25, 25), torch.nn.ReLU(), torch.nn.Linear(25, 25), torch.nn.ReLU(), torch.nn.Linear(25, param2*param2))
-#
-#        self.conv2 = NNConv(param2, param2, nn2, aggr='mean')
-#        
-#
-#        self.fc1 = torch.nn.Linear(param2, param3)
-#        self.fc2 = torch.nn.Linear(param3, num_classes)
-#
-#    def forward(self, data):
-#        x = F.elu(self.conv1(data.x, data.edge_index, data.edge_attr))
-#        x = F.elu(self.conv2(x, data.edge_index, data.edge_attr))
-#        #x = F.elu(self.conv3(x, data.edge_index, data.edge_attr))
-#        x = F.elu(self.fc1(x))
-#        x = F.dropout(x, training=self.training)
-#        return F.log_softmax(self.fc2(x), dim=1)
-
-
-
 
 @torch.no_grad()
 def testNNConv(other_test=False, data_test=[]):
@@ -117,8 +82,6 @@ def ablateEdges(As_I, NXs_I, proportion_ablation):
 
 
 
-
-
 if __name__ == "__main__":
     import numpy as np
     import edge_multi_load_multiBio, calpha_edge_multi_load_multiBio, new_edge_multi_load_multiBio, final_edge_multi_load_multiBio
@@ -131,8 +94,7 @@ if __name__ == "__main__":
     model_path = sys.argv[3]
     calpha_mode = int(sys.argv[4])
     dssp_mode = int(sys.argv[5])
-    #model_path = "/data/PDB/cullpdb/ablation_gnn_trained_" + classification_type  + calpha_str + "cullpdb_nbepochs_" + str(nb_epochs) + ".tch"
-    write_directory = sys.argv[6]
+    output_filename = sys.argv[6]
 
     try:
         name_to_pattern_filename = sys.argv[7]
@@ -149,7 +111,6 @@ if __name__ == "__main__":
     NXs_0_init = [NXs_0_init]
 
     NXs_0 = []
-    import time
     start = time.time()
 
     if classification_type == "helices":
@@ -174,71 +135,7 @@ if __name__ == "__main__":
     NXs = NXs_0_init
     Ys = Ys_0
 
-    amplitude_noise = 0
-    if 0:
-        NXs_0 = []
-        import time
-        start = time.time()
-        for protein_NX in NXs:
-            noise = amplitude_noise*np.random.randn(len(protein_NX),2)
-            protein_NX_array = np.array(protein_NX)
-            noisy_protein_NX_array = noise_project(protein_NX_array, noise)
-            NXs_0.append(noisy_protein_NX_array.tolist())
-        NXs = NXs_0.copy()
-
-    end = time.time()
-
-    #
-    #X_phi_psi_0 = []
-    #for i_PA, PA in enumerate(As):
-    #    X_phi_psi_0_D = {}
-    #    for i_edge, source in enumerate(PA[0]):
-    #        if i_edge % 2 == 0:
-    #            feature_source = NXs[i_PA][i_edge]
-    #            current_feature_source = X_phi_psi_0_D.get(source, []) 
-    #            current_feature_source += feature_source 
-    #            X_phi_psi_0_D[source] = current_feature_source
-    #    
-    #    for source_tmp in X_phi_psi_0_D.keys():
-    #        if len(X_phi_psi_0_D[source_tmp]) < 4: # default dimension for nb_neighbors = 2
-    #            len_miss = 4 - len(X_phi_psi_0_D[source_tmp])
-    #            value_tmp = X_phi_psi_0_D.get(source_tmp, [])
-    #            X_phi_psi_0_D[source_tmp] = value_tmp + [0. for i_tmp in range(len_miss)]
-
-    #    X_phi_psi_P = [[0., 0., 0., 0.] for i in range(len(Xs[i_PA][:-1]))]  # default dimension for nb_neighbors = 2
-    #    for key in X_phi_psi_0_D:
-    #        X_phi_psi_P[key] = X_phi_psi_0_D[key]
-    #    X_phi_psi_0.append(X_phi_psi_P)
-
-    #Xs = [np.concatenate([X_[:-1], X_phi_psi_0[i]], axis=1) for i, X_ in enumerate(Xs)]
-
-    #if len(Ys_0[0]) > 0:
-    #    ground_truth_provided = True
-    #    Ys = [np.array([map_st[yy] for yy in y.tolist()]) for y in Ys_0]
-    #    Ys = [Y_[:-1] for Y_ in Ys]
-    #    Y_values = [Y.tolist() for Y in Ys]
-    #    Y_values = sum(Y_values, [])
-    #    Y_values = sorted(list(set(Y_values)))
-    #    Y_tmp = []
-    #    Y_map = {}
-    #    for i, vy in enumerate(Y_values):
-    #        Y_map[vy] = i
-    #    Ys = [np.array([Y_map[y] for y in Y]) for Y in Ys]
-    #else:
-    #    print("No ground truth provided")
-    #    ground_truth_provided = False
-    #    Ys = [np.array([0] + [1 for i in range(len(Xs[0]) - 1)])]
-    if classification_type == "helices":
-        nb_labels = 2
-    if classification_type == "helices_sheets":
-        nb_labels = 3
-
-    As, Xs, Ys, NXs, ground_truth_provided = final_edge_multi_load_multiBio.dataAugmentation(As, Xs, Ys, NXs, nb_labels, map_st)
-
-    ##############################################################################################################
-    ##############################################################################################################
-
-    data_batches, indices_protein = edge_multi_load_multiBio.graphListToData(As, Xs, Ys, NXs, test=False)
+    data_batches, indices_protein = sequoia_dataload_multibio.graphListToData(As, Xs, Ys, NXs, test=False)
     data = data_batches
 
     n_mask = len(data.test_mask)
@@ -249,17 +146,15 @@ if __name__ == "__main__":
 
     num_node_features = len(Xs[0][0])
     num_edge_features = len(NXs[0][0])
-    ##############################################################################
-    ##############################################################################
+    ##############################################################################################################
+    ##############################################################################################################
 
     from collections import Counter
     np.set_printoptions(threshold=sys.maxsize)
 
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #model, data = Net2(num_node_features, num_classes, num_edge_features).to(device), data.to(device)
     model, data = sequoia_network.Sequoia(num_node_features, num_classes, num_edge_features).to(device), data.to(device)
-
 
 
     PREDS = []
@@ -269,15 +164,11 @@ if __name__ == "__main__":
     if calpha_mode:
         calpha_str = "_calpha_"
 
-    #print(num_classes)
-    
-    pdb.set_trace()
     if osp.exists(model_path):
         model.load_state_dict(torch.load(model_path))
         test_acc, preds = testNNConv(other_test=False) #, data_test=data_test)
         PREDS.append(preds)
         print(preds)
-        print(Ys[0])
         assert(len(preds) == len(Ys[0]))
         filename_split_slash = filename.split("/")
         if len(filename_split_slash) > 1:
@@ -286,13 +177,7 @@ if __name__ == "__main__":
         else:
             filename_w = filename.split(".")[0]
 
-        with open(write_directory + filename_w + "_" + classification_type + ".preds", "w") as f:      
+        with open(output_filename, "w") as f:      
             f.write(" ".join([str(pred) for pred in preds]))  
-
-        if ground_truth_provided: 
-            common_labels = 100*len([1 for i in range(len(preds)) if preds[i] == Ys[0][i]])/float(len(preds))
-            print("Common labels: " + str(common_labels) + " %")
-
-
 
     
