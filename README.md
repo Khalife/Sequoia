@@ -94,13 +94,10 @@ datasetA and datasetB directories also .tgz files containing annotations used fo
 
 
 
-Example for datasetA: 
+Example for datasetA from a directory containing list\_proteins\_datasetA.txt: 
 
-
-cd datasetA
-
-gunzip -k SecStruct_DatasetA.tgz && tar -xvf SecStruct_DatasetA.tar
+mkdir datasetA && cd datasetA
 
 mkdir 00 && cd 00
 
-wget -i ../../list\_proteins\_datasetA.txt
+wget -i ../../list\_proteins\_datasetA.txt --no-check-certificate
