@@ -101,3 +101,9 @@ mkdir datasetA && cd datasetA
 mkdir 00 && cd 00
 
 wget -i ../../list\_proteins\_datasetA.txt --no-check-certificate
+
+
+
+Finally, some examples of trained models are given in the directory examples\_models\_data.
+
+
