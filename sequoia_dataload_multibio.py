@@ -159,7 +159,7 @@ def dataAugmentation(As, Xs, Ys, NXs, nb_labels, map_st, overload=False):
         #Y_map = {}
         #for i, vy in enumerate(Y_values):
         #    Y_map[vy] = i
-        Ys = [np.array([map_st[y] for y in Y]) for Y in Ys]
+        #Ys = [np.array([map_st[y] for y in Y]) for Y in Ys]
     else:
         ground_truth_provided = False
         Ys = [np.array([lab for lab in range(nb_labels-1)] + [nb_labels-1 for i in range(len(Xs[0]) - nb_labels)]).astype(int)]
