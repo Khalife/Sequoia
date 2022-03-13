@@ -39,9 +39,10 @@ Module used to construct distance-based features of the protein using .cif or .p
 
 Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
-python sequoia\_datadump\_multibio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode
+python sequoia\_datadump\_multibio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode conformation\_file
 
-Ex: python sequoia\_datadump\_multibio.py cullpdb/ parsed\_data\_gnn\_cullpdb.pkl 2 xray 0 1
+[comment]: <> (Ex: python sequoia\_datadump\_multibio.py cullpdb/ parsed\_data\_gnn\_cullpdb.pkl 2 xray 0 1)
+Ex: python sequoia\_datadump\_multibio.py filedir\_example/ test\_output.pkl 2 xray False True cullpdb\_dict.json 
 
 
 ### 4 - sequoia\_train\_model.py
@@ -49,9 +50,10 @@ Ex: python sequoia\_datadump\_multibio.py cullpdb/ parsed\_data\_gnn\_cullpdb.pk
 Trains a GNN for secondary structure prediction, using features distance-based features in pkl\_files (training set : 75%). 
 Saves model parameters in the model\_path\_output file.
 
-python sequoia\_train\_model.py train\_filename classification\_type model\_path\_output 
+python sequoia\_train\_model.py train\_filename classification\_type nb\_neighbors model\_path\_output 
 
-Ex: python sequoia\_train\_model.py parsed\_data\_gnn\_cullpdb.pkl helices 2 sequoia\_model\_save.tch
+[comment]: <> (Ex: python sequoia\_train\_model.py parsed\_data\_gnn\_cullpdb.pkl helices 2 sequoia\_model\_save.tch)
+Ex: python sequoia\_train\_model.py test\_output.pkl helices 2 test\_model\_output.tch
 
 ### 5 - sequoia\_infer\_secondary\_structures.py
 
@@ -59,7 +61,9 @@ Loads model in .tch file and infer secondary structures after parsing a .pdb of 
 
 python sequoia\_infer\_secondary\_structures.py input\_filename classification\_type model\_filename calpha\_mode dssp\_mode output\_filename (optional: conformation\_table)
 
-Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 sequoia\_preds.txt cullpdb\_dict.json
+[comment]: <> (Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 sequoia\_preds.txt cullpdb\_dict.json)
+
+Ex: python sequoia\_infer\_secondary\_structures.py filedir\_example/00/2W3G.cif helices test\_model\_output.tch 0 1 sequoia\_preds.txt cullpdb\_dict.json
 
 ### 6 - create\_pml\_file.py
 
