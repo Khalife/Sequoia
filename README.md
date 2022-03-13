@@ -29,7 +29,7 @@ datasetA -> 00 -> 1na2.cif, 1ba3.cif, ...
 Parses .cif of .pdb data files and prints results obtained with the First Order Statistics (FOS) method. 
 
 ```python
-python simple\_display.py filedir
+python simple_display.py filedir
 ```
 
 ### 2 - sequoia\_dataload\_multibio.py
@@ -41,10 +41,15 @@ Module used to construct distance-based features of the protein using .cif or .p
 
 Writes to .pkl files extracted features (using 2 nearest neighbors) for each protein in the subfolders of filedir (cf. 0. for filedir format). The conformation file allows to consider one conformation per protein. Warning: if set to False, several conformations in the file may be used which may be overlapping in space.
 
-python sequoia\_datadump\_multibio.py filedir output\_filename nb\_neighbors conformation calpha\_mode dssp\_mode conformation\_file
+```python
+python sequoia_datadump_multibio.py filedir output_filename nb_neighbors conformation calpha_mode dssp_mode conformation_file
+```
 
-[comment]: <> (Ex: python sequoia\_datadump\_multibio.py cullpdb/ parsed\_data\_gnn\_cullpdb.pkl 2 xray 0 1)
-Ex: python sequoia\_datadump\_multibio.py filedir\_example/ test\_output.pkl 2 xray False True cullpdb\_dict.json 
+[comment]: <> (Ex: python sequoia_datadump_multibio.py cullpdb/ parsed_data_gnn_cullpdb.pkl 2 xray 0 1)
+Example:
+```python
+python sequoia_datadump_multibio.py filedir_example/ test_output.pkl 2 xray False True cullpdb_dict.json 
+```
 
 
 ### 4 - sequoia\_train\_model.py
@@ -52,39 +57,53 @@ Ex: python sequoia\_datadump\_multibio.py filedir\_example/ test\_output.pkl 2 x
 Trains a GNN for secondary structure prediction, using features distance-based features in pkl\_files (training set : 75%). 
 Saves model parameters in the model\_path\_output file.
 
-python sequoia\_train\_model.py train\_filename classification\_type nb\_neighbors model\_path\_output 
+```python
+python sequoia_train_model.py train_filename classification_type nb_neighbors model_path_output 
+```
 
-[comment]: <> (Ex: python sequoia\_train\_model.py parsed\_data\_gnn\_cullpdb.pkl helices 2 sequoia\_model\_save.tch)
-Ex: python sequoia\_train\_model.py test\_output.pkl helices 2 test\_model\_output.tch
+[comment]: <> (Ex: python sequoia_train_model.py parsed_data_gnn_cullpdb.pkl helices 2 sequoia_model_save.tch)
+Example: 
+```python
+python sequoia_train_model.py test_output.pkl helices 2 test_model_output.tch
+```
 
 ### 5 - sequoia\_infer\_secondary\_structures.py
 
 Loads model in .tch file and infer secondary structures after parsing a .pdb of .cif file.
 
-python sequoia\_infer\_secondary\_structures.py input\_filename classification\_type model\_filename calpha\_mode dssp\_mode output\_filename (optional: conformation\_table)
+```python
+python sequoia_infer_secondary_structures.py input_filename classification_type model_filename calpha_mode dssp_mode output_filename (optional: conformation_table)
+```
+[comment]: <> (Ex: python sequoia_infer_secondary_structures.py 1M22.cif helices sequoia_model.tch  1 0 sequoia_preds.txt cullpdb_dict.json)
 
-[comment]: <> (Ex: python sequoia\_infer\_secondary\_structures.py 1M22.cif helices sequoia\_model.tch  1 0 sequoia\_preds.txt cullpdb\_dict.json)
-
-Ex: python sequoia\_infer\_secondary\_structures.py filedir\_example/00/2W3G.cif helices test\_model\_output.tch 0 1 sequoia\_preds.txt cullpdb\_dict.json
+Example:
+````python
+python sequoia_infer_secondary_structures.py filedir_example/00/2W3G.cif helices test_model_output.tch 0 1 sequoia_preds.txt cullpdb_dict.json
+```
 
 ### 6 - create\_pml\_file.py
 
 Reads output file predictions of sequoia\_infer\_secondary\_structures and construct .pml file for visualization with Pymol.
 Uses zero\_residues.py to renumber residues.
 
-python create\_pml\_file.py predictions\_filename input\_filename output\_directory   
+```python
+python create_pml_file.py predictions_filename input_filename output_directory   
+```
 
-Ex: python create\_pml\_file.py sequoia\_preds.txt 1M22.cif .   
+Example:
+```python
+python create_pml_file.py sequoia_preds.txt 1M22.cif .   
+```
 
 
 
-[comment]: <> (5 - clustering\_edge\_multi\_load\_multiBio.py)
+[comment]: <> (5 - clustering_edge_multi_load_multiBio.py)
 
-[comment]: <> (python noisy\_clustering\_edge\_multi\_load\_multiBio.py dataset\_index noise\_level)
+[comment]: <> (python noisy_clustering_edge_multi_load_multiBio.py dataset_index noise_level)
 
-[comment]: <> (The dataset\_index variables is 0 for datasetA and 1 for datasetB.)
+[comment]: <> (The dataset_index variables is 0 for datasetA and 1 for datasetB.)
 
-[comment]: <> (Ex: python noisy\_clustering\_edge\_multi\_load\_multiBio.py 0 0.05)
+[comment]: <> (Ex: python noisy_clustering_edge_multi_load_multiBio.py 0 0.05)
 
 [comment]: <> (Testing distance-based criteria for beta-sheet clustering. Returns score on list of .cif files)
 
@@ -93,23 +112,23 @@ Ex: python create\_pml\_file.py sequoia\_preds.txt 1M22.cif .
 
 ## Datasets 
 
-The list of pdb files for our Dataset A (X-ray cristallography) and Dataset B (NMR conformations) are in  datasetA/list\_proteins\_datasetA.txt and datasetB/list\_proteins\_datasetB.txt respectively.
+The list of pdb files for our Dataset A (X-ray cristallography) and Dataset B (NMR conformations) are in  datasetA/list_proteins_datasetA.txt and datasetB/list_proteins_datasetB.txt respectively.
 
 datasetA and datasetB directories also .tgz files containing annotations used for beta-sheet clustering.
 
 
 
 
-Example for datasetA from a directory containing list\_proteins\_datasetA.txt: 
+Example for datasetA from a directory containing list_proteins_datasetA.txt: 
 
 mkdir datasetA && cd datasetA
 
 mkdir 00 && cd 00
 
-wget -i ../../list\_proteins\_datasetA.txt --no-check-certificate
+wget -i ../../list_proteins_datasetA.txt --no-check-certificate
 
 
 
-Finally, some examples of trained models are given in the directory examples\_models\_data.
+Finally, some examples of trained models are given in the directory examples_models_data.
 
 
