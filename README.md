@@ -77,7 +77,7 @@ python sequoia_infer_secondary_structures.py input_filename classification_type 
 [comment]: <> (Ex: python sequoia_infer_secondary_structures.py 1M22.cif helices sequoia_model.tch  1 0 sequoia_preds.txt cullpdb_dict.json)
 
 Example:
-````python
+```python
 python sequoia_infer_secondary_structures.py filedir_example/00/2W3G.cif helices test_model_output.tch 0 1 sequoia_preds.txt cullpdb_dict.json
 ```
 
