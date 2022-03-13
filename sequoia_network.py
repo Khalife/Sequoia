@@ -14,12 +14,12 @@ class Sequoia(torch.nn.Module):
         ##############
         # Parameters controlling the size of the linear operators and convolutional filters 
         param0, param1, param2, param3, param4 = 8, 64, 64, 64, 64  # First block
-        param5, param6, param7, param8, param9 = 64, 25, 25, 25, 64         # Second block
+        param5, param6, param7, param8, param9 = 25, 25, 25, 25, 64         # Second block
         ##############
 
         ##############
         # First block
-        nn1 = torch.nn.Sequential(torch.nn.Linear(num_edge_features, param1), torch.nn.ReLU(), torch.nn.Linear(param1, param3), torch.nn.ReLU(), torch.nn.Linear(param3, param4), torch.nn.ReLU(), torch.nn.Linear(param4, num_node_features*param2))
+        nn1 = torch.nn.Sequential(torch.nn.Linear(num_edge_features, param1), torch.nn.ReLU(), torch.nn.Linear(param1, param3), torch.nn.ReLU(), torch.nn.Linear(param3, param4), torch.nn.ReLU(), torch.nn.Linear(param4, num_node_features*param5))
         self.conv1 = NNConv(num_node_features, param5, nn1, aggr='mean')
         ##############
 

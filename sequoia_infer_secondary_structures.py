@@ -7,12 +7,11 @@ def testNNConv(other_test=False, data_test=[]):
     PREDS = []
     if not other_test:
         logits, scores = model(data), []
-        for mask_key, mask in data('test_mask'):
-            pred = logits[mask].max(1)[1]
-            score = f1_score(pred.tolist(), data.y[mask].tolist(), average="micro")
+        if 1:
+            pred = logits.max(1)[1]
+            score = f1_score(pred.tolist(), data.y.tolist(), average="micro")
             scores.append(score)
-            if mask_key == "test_mask":
-                PREDS = pred.tolist()
+            PREDS = pred.tolist()
 
     else:
         logits_train, _ = model(data), []
@@ -124,7 +123,6 @@ if __name__ == "__main__":
     if len(Ys[0]) > 0:
         ground_truth_provided = True
         Ys = [np.array([map_st[yy] for yy in y.tolist()]) for y in Ys]
-        Ys = [Y_[:-1] for Y_ in Ys]
         Y_values = [Y.tolist() for Y in Ys]
         Y_values = sum(Y_values, [])
         Y_values = sorted(list(set(Y_values)))
@@ -172,16 +170,16 @@ if __name__ == "__main__":
         model.load_state_dict(torch.load(model_path))
         test_acc, preds = testNNConv(other_test=False) #, data_test=data_test)
         PREDS.append(preds)
+        print("\n")
         print(preds)
-        assert(len(preds) == len(Ys[0]))
-        filename_split_slash = filename.split("/")
-        if len(filename_split_slash) > 1:
-            filename_w = filename_split_slash[-1]
-            filename_w = filename_w.split(".")[0]
-        else:
-            filename_w = filename.split(".")[0]
+        
+        
+        
+        
+        
+        
 
-        with open(output_filename, "w") as f:      
-            f.write(" ".join([str(pred) for pred in preds]))  
+        
+        
 
     

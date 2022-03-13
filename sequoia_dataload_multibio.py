@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.sparse import coo_matrix
 import torch
-from torch_geometric.utils import dense_to_sparse
 from torch_geometric.data import Data
 from torch_geometric.data import Batch
 import random
@@ -353,7 +352,10 @@ def loadGraphFromFile(filename, name_to_pattern, classification_type="helices", 
         if distance_based:
             distances_i = DISTANCES[i]
             indices_closest_neighbors_i = indices_closest_neighbors[i]
-            X[i] = standard_amino_acids_map[residues[i].resname]
+            try:
+                X[i] = standard_amino_acids_map[residues[i].resname]
+            except:
+                pdb.set_trace()
             FOS_i = []
             for inj, nj in enumerate(indices_closest_neighbors_i[:nb_neighbors]): 
                 distances_nj = DISTANCES[nj]
@@ -474,7 +476,6 @@ def loadGraphsFromDirectory(filedir, name_to_pattern, classification_type="helic
                             Ys.append(Y)
                             NXs.append(NX)
                         
-    filew.close()
     return As, Xs, Ys, NXs, FOSs
 
 
