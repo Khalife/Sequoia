@@ -11,7 +11,7 @@ This repository contains the implementation of a method adressing the assignment
 
 scipy, Biopython, pytorch, pytorch-geometric, scikit-learn
 
-Tested and validated with python 3.8 and versions:
+Tested and validated with python 3.8 (CUDA 11.0) and versions:
 
 pytorch: 1.11.0+cu102
 
