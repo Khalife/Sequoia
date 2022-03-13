@@ -11,15 +11,15 @@ This repository contains the implementation of a method adressing the assignment
 
 scipy, Biopython, pytorch, pytorch-geometric, scikit-learn
 
-Tested and validated with python 3.8 and:
+Tested and validated with python 3.8 and versions:
 
-pytorch.__version__: 1.11.0+cu102
+pytorch: 1.11.0+cu102
 
-pytorch\_geometric.__version__: 2.04
+pytorch\_geometric: 2.04
 
-Bio.__version__ 1.78
+Bio: 1.78
 
-sklearn.__version__ 0.23.2 
+sklearn: 0.23.2 
 
 ## Scripts
 
