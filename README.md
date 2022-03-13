@@ -28,7 +28,9 @@ datasetA -> 00 -> 1na2.cif, 1ba3.cif, ...
 
 Parses .cif of .pdb data files and prints results obtained with the First Order Statistics (FOS) method. 
 
+```python
 python simple\_display.py filedir
+```
 
 ### 2 - sequoia\_dataload\_multibio.py
 
